@@ -1,0 +1,16 @@
+{
+  "SIMULATION_RUNTIME_NS": 2e9,
+  "TRANSPORT_LAYER": "simple_dctcp",
+
+  "enable_log_port_queue_state": false,
+  "enable_log_flow_throughput": false,
+  "enable_log_sending_throughput": false,
+
+  "INPUT_QUEUE_BUFFER_SIZE_BYTES": 20000,
+  "OUTPUT_QUEUE_BUFFER_SIZE_BYTES": 20000,
+  "CONGESTION_THRESHOLD_BYTES": 5000,
+  "NETWORK_LINK_LATENCY_NS": 1000,
+  "SERVER_LINK_LATENCY_NS": 1000,
+  "INJECTION_LINK_BW_GBPS": 1000,
+  "NUM_VCS": 2
+}
