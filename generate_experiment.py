@@ -3,11 +3,11 @@ File generating script for SiPAC simulations.
 
 Usage:
     1) Run "python3 generate_experiments.py" with the following input argument:
-        --exp_num=
+        --exp_id=
             1. primitive collective experiment
             2. allreduce collective experiment
             3. hybrid parallel collective experiment
-    e.g. "python3 generate_experiments.py --exp_num=1"
+    e.g. "python3 generate_experiments.py --exp_id=1"
 """
 
 import os, sys, getopt
@@ -18,7 +18,7 @@ from traffic.synthetic_traffic import *
 
 
 ####################################################################################################
-# Simulation parameters 
+# Simulation Parameters 
 ####################################################################################################
 
 # Directory Setup
@@ -47,7 +47,7 @@ property_dictionary = {"num_vcs": int(input_parameters["NUM_VCS"]),
                         "server_link_delay_ns": int(input_parameters["SERVER_LINK_LATENCY_NS"]),
                         "injection_link_bw_gbps": int(input_parameters["INJECTION_LINK_BW_GBPS"]),
                         "transport_layer": input_parameters["TRANSPORT_LAYER"],
-                        "congestion_threshold_bytes": int(input_parameters["CONGESTION_THRESHOLD_BYTES"]), # For DCTCP
+                        "congestion_threshold_bytes": int(input_parameters["CONGESTION_THRESHOLD_BYTES"]),
                         "stateful_load_balancing": False,
                         "enable_packet_spraying": False,
                         }
@@ -146,7 +146,6 @@ def generateAllReduceTraffic(topology):
     return traffic_generators
 
 def generatePrimitiveTraffic(topology):
-    # primitive traffic
     primitive_alltoall_traffic = primitive_alltoall_traffic_generator.PrimitiveAllToAllTrafficGenerator(p=topology.getNumServers())
     primitive_onetoall_traffic = primitive_onetoall_traffic_generator.PrimitiveOneToAllTrafficGenerator(p=topology.getNumServers(), src_node=0)
     primitive_alltoone_traffic = primitive_alltoone_traffic_generator.PrimitiveAllToOneTrafficGenerator(p=topology.getNumServers(), dst_node=0)
@@ -158,25 +157,22 @@ def generatePrimitiveTraffic(topology):
     return traffic_generators
 
 def generateAllReduceExperiment():
-    ### Variable Parameters
     print("[Setup] Generate allreduce experiment files")
     flow_size_bytes = [1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
     num_nodes_list = [16, 64, 256, 512, 1024]
     per_gpu_bw_gbps_list = [2048]
-    simulation_config_filenames = generateExperiment(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, "allreduce")
+    simulation_config_filenames = generateExperimentFiles(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, "allreduce")
     return simulation_config_filenames
 
 def generatePrimitiveExperiment():
-    ### Variable Parameters
     print("[Setup] Generate primitive experiment files")
     flow_size_bytes = [1e2,1e3,1e4,1e5,1e6,1e7,1e8]
     num_nodes_list = [512]
     per_gpu_bw_gbps_list = [2048]
-    simulation_config_filenames = generateExperiment(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, "primitive")
+    simulation_config_filenames = generateExperimentFiles(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, "primitive")
     return simulation_config_filenames
 
-def generateExperiment(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, traffic_type):
-    ### Simulation Setup
+def generateExperimentFiles(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, traffic_type):
     simulation_config_filenames = []
     for num_nodes in num_nodes_list:
         l = 2 if num_nodes == 512 else 1
@@ -208,20 +204,18 @@ def generateHybridParallelExperiment():
     torus_dim = {16: [4,4], 64: [8,8], 256: [16,16], 512: [32,16], 1024: [32,32]}
     # Need to setup experiment for this
     model_info = dict({ "intra_group_comm_type":"ALLTOALL", "intra_group_algo_type":"mesh", 
-                        "inter_group_comm_type":"ALLREDUCE", "inter_group_algo_type":"bcast",
+                        "inter_group_comm_type":"ALLREDUCE", "inter_group_algo_type":"sipco",
                         "intra_group_message_size":100e6,
                         "inter_group_message_size":100e6})
     
     intra_topo_to_algo_map = {"dgx_superpod_{}nodes".format(num_nodes): "mesh", 
                                   "2D_torus_{}_{}_{}nodes".format(torus_dim[num_nodes][0],torus_dim[num_nodes][1], num_nodes): "mesh", 
                                   "Bcube_{}r_{}l".format(r,l): "mesh",
-                                #   "photonic_Bcube_{}r_{}l".format(r,l): "mesh", 
-                                  "photonic_Bcube_orig_{}r_{}l".format(r,l): "bcast"}
+                                  "sipac_{}r_{}l".format(r,l): "sipco"}
     inter_topo_to_algo_map = {"dgx_superpod_{}nodes".format(num_nodes): "ring", 
                                   "2D_torus_{}_{}_{}nodes".format(torus_dim[num_nodes][0],torus_dim[num_nodes][1], num_nodes): "ring", 
                                   "Bcube_{}r_{}l".format(r,l): "ring",
-                                #   "photonic_Bcube_{}r_{}l".format(r,l): "bcast", 
-                                  "photonic_Bcube_orig_{}r_{}l".format(r,l): "bcast"}
+                                  "sipac_{}r_{}l".format(r,l): "sipco"}
     ### Simulation Setup
     simulation_config_filenames = []
     for num_nodes in num_nodes_list:
@@ -256,25 +250,25 @@ def generateHybridParallelExperiment():
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"he:",["exp_num="])
+        opts, args = getopt.getopt(sys.argv[1:],"he:",["exp_id="])
     except getopt.GetoptError:
         print('python3 generate_experiment.py -e <experiment_number>')
         sys.exit(2)
-    exp_num = 1
+    exp_id = 1
     for opt, arg in opts:
         if opt == '-h':
-            print('python3 generate_experiment.py -exp_num <experiment_number>')
+            print('python3 generate_experiment.py -exp_id <experiment_number>')
             sys.exit()
-        elif opt in ("-e", "--exp_num"):
-            exp_num = int(arg)
-    exp_num_map = {1: "primitive", 2: "allreduce", 3: "hybrid"}
+        elif opt in ("-e", "--exp_id"):
+            exp_id = int(arg)
+    exp_id_map = {1: "primitive", 2: "allreduce", 3: "hybrid"}
     simulations_config_filenames = []
-    if exp_num == 1:
+    if exp_id == 1:
         simulations_config_filenames = generatePrimitiveExperiment()
-    elif exp_num == 2:
+    elif exp_id == 2:
         simulations_config_filenames = generateAllReduceExperiment()
-    elif exp_num == 3:
+    elif exp_id == 3:
         simulations_config_filenames = generateHybridParallelExperiment()
     else:
         print("Invalid Experiment Number")
-    if simulations_config_filenames: utilities.generateBashScript(EXECUTION_DIRECTORY, simulations_config_filenames, exp_num_map[exp_num])
+    if simulations_config_filenames: utilities.generateBashScript(EXECUTION_DIRECTORY, simulations_config_filenames, exp_id_map[exp_id])
