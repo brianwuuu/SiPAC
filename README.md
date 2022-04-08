@@ -1,6 +1,6 @@
 # Silicon Photonic Accelerated Compute Cluster (SiPAC)
 
-This repository contains the source codes needed to reproduce results for the SiPAC architecture.
+This repository contains the source codes needed to reproduce results for the SiPAC architecture evaluation.
 
 ## Getting Started
 
@@ -8,9 +8,9 @@ This repository contains the source codes needed to reproduce results for the Si
 
 #### 1. Netbench (https://github.com/brianwuuu/netbench)
 
-The original Netbench simulator can be found in (https://github.com/ndal-eth/netbench). We have modified Netbench to include functionalities that enable the accurate evaluation of the SiPAC architecture. Please follow the steps in building Netbench.
+The origina1l Netbench simulator can be found in (https://github.com/ndal-eth/netbench). We have modified Netbench to include functionalities that enable the accurate evaluation of the SiPAC architecture. Please follow the steps in building Netbench.
 
-#### 3. Python 3
+#### 2. Python 3
 
 Python dependencies: numpy, math, matplotlib.
 
