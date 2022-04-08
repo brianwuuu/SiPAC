@@ -60,7 +60,8 @@ def generateBashScript(exec_dir, netbench_config_files_list, exp_name=""):
     os.chmod(exec_dir + file_name, st.st_mode | stat.S_IEXEC)
     return
 
-
+# Given simulation parameters and network parameters, generate a string to be
+# written to the simulation parameter file
 def write_simulation_configuration_file(output_base_dir,
                                         output_subdir,
                                         initial_topology_filename, 

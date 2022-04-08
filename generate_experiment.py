@@ -52,6 +52,10 @@ property_dictionary = {"num_vcs": int(input_parameters["NUM_VCS"]),
                         "enable_packet_spraying": False,
                         }
 
+# Derive the hardware/system parameter name that includes information on:
+# 1) Transport layer protocol and input/output port buffer size
+# 2) Network link bandwidth, network link latency
+# 3) Routing scheme
 def deriveNetworkHardwareParameterName(routing_scheme, network_link_bandwidth_gbps):
     protocol_name = ""
     hardware_name = ""
@@ -67,6 +71,8 @@ def deriveNetworkHardwareParameterName(routing_scheme, network_link_bandwidth_gb
     hardware_name += "{}g_{}ns_{}".format(network_link_bandwidth_gbps, int(input_parameters["NETWORK_LINK_LATENCY_NS"]), routing_scheme)
     return protocol_name + "_" + hardware_name
 
+# Given the topology, traffic arrival events, traffic type, routing scheme, message (flow) size, and network bandwidth,
+# generate the simulation parameter files required to run Netbench.
 def createExperimentFiles(topology, traffic_arrival_events, traffic_pattern, routing_scheme, flow_size, network_link_bandwidth_gbps):
     # Set up
     if isinstance(flow_size, float) or isinstance(flow_size, int): flow_size = utilities.extract_byte_string(flow_size)
@@ -106,19 +112,21 @@ def createExperimentFiles(topology, traffic_arrival_events, traffic_pattern, rou
         f.write(config_file_string)
     return simulation_config_filename
 
-def generateTopology(target_num_nodes, per_gpu_bw_gbps, l=1):
+# Generate the topologies compared in this work normalized along the per-CU bandwidth
+def generateTopology(target_num_nodes, per_cu_bw_gbps, l=1):
     ### Topology-related
     print("[Setup] Generate topologies")
     p = target_num_nodes
     r = math.ceil(float(p) ** (1/(float(l)+1)))
     torus_dim = {16: [4,4], 64: [8,8], 256: [16,16], 512: [32,16], 1024: [32,32]}
-    sipac_network_network = sipac_network_topology.SiPACNetworkTopology(r=r,l=l,link_bw=per_gpu_bw_gbps//((l+1)*(r-1)), num_wavelengths_per_pair=1)
-    bcube_network = bcube_network_topology.BcubeNetworkTopology(r=r,l=l,link_bw=per_gpu_bw_gbps//(l+1), num_wavelengths_per_pair=1)
-    superpod_network = dgx_superpod_network_topology.DGX_Superpod(target_num_gpus=p, link_bw=per_gpu_bw_gbps//6) # each gpu is connected to 6 nvswitches with 2 links each = 12 links
-    torus_network = nd_torus_network_topology.NDTorusNetworkTopology(torus_dim[target_num_nodes], link_bw=per_gpu_bw_gbps//(2*2))
+    sipac_network_network = sipac_network_topology.SiPACNetworkTopology(r=r,l=l,link_bw=per_cu_bw_gbps//((l+1)*(r-1)), num_wavelengths_per_pair=1)
+    bcube_network = bcube_network_topology.BcubeNetworkTopology(r=r,l=l,link_bw=per_cu_bw_gbps//(l+1), num_wavelengths_per_pair=1)
+    superpod_network = dgx_superpod_network_topology.DGX_Superpod(target_num_gpus=p, link_bw=per_cu_bw_gbps//6) # each gpu is connected to 6 nvswitches with 2 links each = 12 links
+    torus_network = nd_torus_network_topology.NDTorusNetworkTopology(torus_dim[target_num_nodes], link_bw=per_cu_bw_gbps//(2*2))
     topology_list = [superpod_network, torus_network, bcube_network, sipac_network_network]
     return topology_list
 
+# Given a specific topology, generate all-reduce traffic based on different all-reduce algorithms
 def generateAllReduceTraffic(topology):
     ### Traffic generators
     print("[Setup] Generate traffic for {}".format(topology.getName()))
@@ -145,6 +153,7 @@ def generateAllReduceTraffic(topology):
                         }
     return traffic_generators
 
+# Given a specific topology, generate primitive collectives (one-to-all, all-to-one, all-to-all).
 def generatePrimitiveTraffic(topology):
     primitive_alltoall_traffic = primitive_alltoall_traffic_generator.PrimitiveAllToAllTrafficGenerator(p=topology.getNumServers())
     primitive_onetoall_traffic = primitive_onetoall_traffic_generator.PrimitiveOneToAllTrafficGenerator(p=topology.getNumServers(), src_node=0)
@@ -156,28 +165,13 @@ def generatePrimitiveTraffic(topology):
                         }
     return traffic_generators
 
-def generateAllReduceExperiment():
-    print("[Setup] Generate allreduce experiment files")
-    flow_size_bytes = [1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
-    num_nodes_list = [16, 64, 256, 512, 1024]
-    per_gpu_bw_gbps_list = [2048]
-    simulation_config_filenames = generateExperimentFiles(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, "allreduce")
-    return simulation_config_filenames
-
-def generatePrimitiveExperiment():
-    print("[Setup] Generate primitive experiment files")
-    flow_size_bytes = [1e2,1e3,1e4,1e5,1e6,1e7,1e8]
-    num_nodes_list = [512]
-    per_gpu_bw_gbps_list = [2048]
-    simulation_config_filenames = generateExperimentFiles(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, "primitive")
-    return simulation_config_filenames
-
-def generateExperimentFiles(num_nodes_list, per_gpu_bw_gbps_list, flow_size_bytes, traffic_type):
+# Generate the required files for different types of experiments
+def generateExperimentFiles(num_nodes_list, per_cu_bw_gbps_list, flow_size_bytes, traffic_type):
     simulation_config_filenames = []
     for num_nodes in num_nodes_list:
         l = 2 if num_nodes == 512 else 1
-        for per_gpu_bw_gbps in per_gpu_bw_gbps_list:
-            topology_list = generateTopology(num_nodes, per_gpu_bw_gbps, l=l)
+        for per_cu_bw_gbps in per_cu_bw_gbps_list:
+            topology_list = generateTopology(num_nodes, per_cu_bw_gbps, l=l)
             for topology in topology_list:
                 topology.wireNetwork()
                 if traffic_type == "primitive": traffic_generators = generatePrimitiveTraffic(topology)
@@ -195,11 +189,30 @@ def generateExperimentFiles(num_nodes_list, per_gpu_bw_gbps_list, flow_size_byte
                         simulation_config_filenames.append(simulation_config_filename)
     return simulation_config_filenames
 
+# Experiment parameter setup for all-reduce experiments.
+def generateAllReduceExperiment():
+    print("[Setup] Generate allreduce experiment files")
+    flow_size_bytes = [1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
+    num_nodes_list = [16, 64, 256, 512, 1024]
+    per_cu_bw_gbps_list = [2048]
+    simulation_config_filenames = generateExperimentFiles(num_nodes_list, per_cu_bw_gbps_list, flow_size_bytes, "allreduce")
+    return simulation_config_filenames
+
+# Experiment parameter setup for primitive collective experiments.
+def generatePrimitiveExperiment():
+    print("[Setup] Generate primitive experiment files")
+    flow_size_bytes = [1e2,1e3,1e4,1e5,1e6,1e7,1e8]
+    num_nodes_list = [512]
+    per_cu_bw_gbps_list = [2048]
+    simulation_config_filenames = generateExperimentFiles(num_nodes_list, per_cu_bw_gbps_list, flow_size_bytes, "primitive")
+    return simulation_config_filenames
+
+# Experiment parameter setup for hybrid parallel collective experiments.
 def generateHybridParallelExperiment():
     ### Variable Parameters
     print("[Setup] Generate hybrid parallel experiment files")
     num_nodes_list = [64] # 16 , 64, 128, 256, 512, 1024
-    per_gpu_bw_gbps_list = [128, 256, 512, 1024, 2048, 4096] # 25 GBps/link * 2 links/nvswitch * 6 nvswitches * 8 Gbps/GBps = 2400 Gbps --> A100 system per-GPU bw
+    per_cu_bw_gbps_list = [128, 256, 512, 1024, 2048, 4096] # 25 GBps/link * 2 links/nvswitch * 6 nvswitches * 8 Gbps/GBps = 2400 Gbps --> A100 system per-GPU bw
     num_mp_nodes = [16] # try 64
     torus_dim = {16: [4,4], 64: [8,8], 256: [16,16], 512: [32,16], 1024: [32,32]}
     # Need to setup experiment for this
@@ -221,8 +234,8 @@ def generateHybridParallelExperiment():
     for num_nodes in num_nodes_list:
         l = 2 if num_nodes == 512 or num_nodes == 64 else 1
         r = math.ceil(float(num_nodes) ** (1/(float(l)+1)))
-        for per_gpu_bw_gbps in per_gpu_bw_gbps_list:
-            topology_list = generateTopology(num_nodes, per_gpu_bw_gbps, l=l)
+        for per_cu_bw_gbps in per_cu_bw_gbps_list:
+            topology_list = generateTopology(num_nodes, per_cu_bw_gbps, l=l)
             for topology in topology_list:
                 topology.wireNetwork()
                 model_info["intra_group_algo_type"] = intra_topo_to_algo_map[topology.getName()]
