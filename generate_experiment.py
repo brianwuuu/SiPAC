@@ -119,11 +119,11 @@ def generateTopology(target_num_nodes, per_cu_bw_gbps, l=1):
     p = target_num_nodes
     r = math.ceil(float(p) ** (1/(float(l)+1)))
     torus_dim = {16: [4,4], 64: [8,8], 256: [16,16], 512: [32,16], 1024: [32,32]}
-    sipac_network_network = sipac_network_topology.SiPACNetworkTopology(r=r,l=l,link_bw=per_cu_bw_gbps//((l+1)*(r-1)), num_wavelengths_per_pair=1)
+    sipac_network = sipac_network_topology.SiPACNetworkTopology(r=r,l=l,link_bw=per_cu_bw_gbps//((l+1)*(r-1)), link_latency=int(input_parameters["NETWORK_LINK_LATENCY_NS"]), num_wavelengths_per_pair=1)
     bcube_network = bcube_network_topology.BcubeNetworkTopology(r=r,l=l,link_bw=per_cu_bw_gbps//(l+1), num_wavelengths_per_pair=1)
     superpod_network = dgx_superpod_network_topology.DGX_Superpod(target_num_gpus=p, link_bw=per_cu_bw_gbps//6) # each gpu is connected to 6 nvswitches with 2 links each = 12 links
     torus_network = nd_torus_network_topology.NDTorusNetworkTopology(torus_dim[target_num_nodes], link_bw=per_cu_bw_gbps//(2*2))
-    topology_list = [superpod_network, torus_network, bcube_network, sipac_network_network]
+    topology_list = [superpod_network, torus_network, bcube_network, sipac_network]
     return topology_list
 
 # Given a specific topology, generate all-reduce traffic based on different all-reduce algorithms
