@@ -199,7 +199,7 @@ def generateAllReduceExperiment():
     return simulation_config_filenames
 
 # Experiment parameter setup for primitive collective experiments.
-def generatePrimitiveExperiment():
+def generatePrimitiveCollectiveExperiment():
     print("[Setup] Generate primitive experiment files")
     flow_size_bytes = [1e2,1e3,1e4,1e5,1e6,1e7,1e8]
     num_nodes_list = [512]
@@ -277,7 +277,7 @@ if __name__ == "__main__":
     exp_id_map = {1: "primitive", 2: "allreduce", 3: "hybrid"}
     simulations_config_filenames = []
     if exp_id == 1:
-        simulations_config_filenames = generatePrimitiveExperiment()
+        simulations_config_filenames = generatePrimitiveCollectiveExperiment()
     elif exp_id == 2:
         simulations_config_filenames = generateAllReduceExperiment()
     elif exp_id == 3:
