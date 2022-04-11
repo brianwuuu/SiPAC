@@ -92,27 +92,17 @@ def write_simulation_configuration_file(output_base_dir,
     str_builder += "# Network Device\n"
     str_builder += "transport_layer={}\n".format(network_property_dictionary["transport_layer"])
     
-    if network_property_dictionary["transport_layer"] == "infiniband":
-        str_builder += "network_device=simple_infiniband_switch\n"
-        str_builder += "network_device_routing=simple_infiniband_ecmp\n"
-        str_builder += "ecmp_fraction=1.0\n"
-        str_builder += "infiniband_input_queue_size_bytes={}\n".format(network_property_dictionary["input_queue_size_bytes"])
-        str_builder += "num_vcs={}\n".format(network_property_dictionary["num_vcs"]).lower()
+    if routing_scheme == "ksp":
+        str_builder += "network_device=source_routing_switch\n"
+        str_builder += "network_device_routing=k_shortest_paths\n"
+        str_builder += "k_for_k_shortest_paths={}\n".format(2)
+    elif routing_scheme == "ecmp":
+        str_builder += "network_device=ecmp_switch\n"
+        str_builder += "network_device_routing=ecmp\n"
     else:
-        if routing_scheme == "ksp":
-            str_builder += "network_device=source_routing_switch\n"
-            str_builder += "network_device_routing=k_shortest_paths\n"
-            str_builder += "k_for_k_shortest_paths={}\n".format(2)
-        elif routing_scheme == "ecmp":
-            str_builder += "network_device=ecmp_switch\n"
-            str_builder += "network_device_routing=ecmp\n"
-        else:
-            print("Unsupported routing")
-            assert(False)
+        print("Unsupported routing")
+        assert(False)
 
-    str_builder += "stateful_load_balancing={}\n".format(network_property_dictionary["stateful_load_balancing"]).lower()
-    str_builder += "enable_packet_spraying={}\n".format(network_property_dictionary["enable_packet_spraying"]).lower()
-    str_builder += "wcmp_path_weights_filename={}\n".format(initial_routing_weights_filename)
     str_builder += "link_delay_filename={}\n".format(link_delay_filename)
     str_builder += "network_device_intermediary=identity\n"
     str_builder += "\n"
