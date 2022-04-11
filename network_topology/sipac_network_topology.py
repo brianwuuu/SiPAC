@@ -2,7 +2,7 @@ import itertools, pprint
 from network_topology.network_topology import *
 
 class SiPACNetworkTopology(NetworkTopology):
-    def __init__(self, r, l, link_bw, num_wavelengths_per_pair=1):
+    def __init__(self, r, l, link_bw, link_latency, num_wavelengths_per_pair=1):
         NetworkTopology.__init__(self)
         self.name = "sipac"
         self.switch_radix = r
@@ -21,6 +21,7 @@ class SiPACNetworkTopology(NetworkTopology):
         # Links
         self.num_wavelengths_per_pair = num_wavelengths_per_pair
         self.link_bw = link_bw
+        self.link_latency = link_latency
 
     def getName(self):
         network_name = self.name + "_{}r_{}l".format(self.num_gpus_per_group, self.num_levels-1)
@@ -137,3 +138,18 @@ class SiPACNetworkTopology(NetworkTopology):
                 str_builder += "{},{},{},{}\n".format(timestamp, int(src), int(dst), sum_bytes)
                 number_of_flows += 1
         return str_builder, number_of_flows
+
+    def checkLinkAdjacencyList(self, src, dst):
+        if src in self.adjacency_list and dst in self.adjacency_list:
+            if dst in self.adjacency_list[src] and src in self.adjacency_list[dst]: return True
+            else: return False
+        else: return False
+
+    def generateLinkDelayFileString(self):
+        str_builder = ""    
+        for src_gpu in self.gpus:
+            for connected_device in self.adjacency_list[src_gpu]:
+                assert(self.checkLinkAdjacencyList(src_gpu, connected_device)), "Link between {} and {} does not exist.".format(src_gpu, connected_device)
+                # Transparent switching involves 2x link latency since it connects two endpoints with two links.
+                str_builder += "{},{},{},{}\n".format(src_gpu, connected_device, self.link_latency * 2, self.link_bw)
+        return str_builder
