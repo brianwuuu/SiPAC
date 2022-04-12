@@ -83,15 +83,13 @@ def createExperimentFiles(topology, traffic_arrival_events, traffic_pattern, rou
     topology_directory = traffic_directory + "/" + topology.getName()
     if not os.path.isdir(topology_directory): os.mkdir(topology_directory)
     topology_filename = "{}/initial_topology.topology".format(topology_directory)
-    with open(topology_filename, "w+") as f: f.write(topology.generateTopologyFileString())
-    routing_path_split_ratio_filename = "{}/initial_wcmp_path_split_weights.txt".format(topology_directory)
-    # 4) Flow Size Directory
+    # 3) Flow Size Directory
     flow_size_directory = "{}/{}".format(topology_directory, flow_size)
     if not os.path.isdir(flow_size_directory): os.mkdir(flow_size_directory)
     traffic_flows_arrival_filename = "{}/flow_arrivals.txt".format(flow_size_directory)
     traffic_flows_arrival_string, number_of_flows = topology.generateTrafficEventsString(traffic_arrival_events)
     with open(traffic_flows_arrival_filename, "w+") as f: f.write(traffic_flows_arrival_string)
-    # 3) Hardware Parameter Directory
+    # 4) Hardware Parameter Directory
     hardware_parameter_name = deriveNetworkHardwareParameterName(routing_scheme, network_link_bandwidth_gbps)
     hardware_parameter_directory = "{}/{}".format(flow_size_directory, hardware_parameter_name)
     if not os.path.isdir(hardware_parameter_directory): os.mkdir(hardware_parameter_directory)
@@ -101,10 +99,9 @@ def createExperimentFiles(topology, traffic_arrival_events, traffic_pattern, rou
                                                                         "",
                                                                         topology_filename, 
                                                                         traffic_flows_arrival_filename, 
-                                                                        routing_path_split_ratio_filename,
                                                                         routing_scheme,
                                                                         link_delay_filename,
-                                                                        input_parameters["SIMULATION_RUNTIME_NS"],
+                                                                        int(input_parameters["SIMULATION_RUNTIME_NS"]),
                                                                         number_of_flows,
                                                                         property_dictionary)
     simulation_config_filename = "{}/simulation_parameters.properties".format(hardware_parameter_directory)
