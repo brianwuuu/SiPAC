@@ -142,6 +142,7 @@ def generateAllReduceTraffic(topology):
     elif topology.getName().startswith("sipac") or topology.getName().startswith("Bcube"):
         k = (topology.getR()) ** (topology.getL())
         hierarchical_allreduce_traffic = hierarchical_allreduce_traffic_generator.HierarchicalAllReduceTrafficGenerator(p=topology.getNumServers(), k=int(k), num_server_per_job=topology.getNumServers())
+    sipco_allreduce_traffic = None
     if topology.getName().startswith("sipac") or topology.getName().startswith("Bcube"):
         sipco_allreduce_traffic = sipco_allreduce_traffic_generator.SiPCOAllReduceTrafficGenerator(r=topology.getR(), l=topology.getL(), num_server_per_job=topology.getNumServers())
 
@@ -178,6 +179,7 @@ def generateExperimentFiles(num_nodes_list, per_cu_bw_gbps_list, flow_size_bytes
                 elif traffic_type == "allreduce": traffic_generators = generateAllReduceTraffic(topology)
                 else: raise Exception("Unknown traffic type.")
                 for traffic_name, traffic_generator in traffic_generators.items():
+                    if not traffic_generator: continue
                     for flow_size in flow_size_bytes:
                         traffic_arrival_events = traffic_generator.plan_arrivals(flow_size)
                         simulation_config_filename = createExperimentFiles(topology=topology, 
