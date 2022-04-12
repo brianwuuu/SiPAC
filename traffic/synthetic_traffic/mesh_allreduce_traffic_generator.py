@@ -6,7 +6,7 @@ Generates mesh allreduce traffic.
 '''
 class MeshAllReduceTrafficGenerator(SyntheticTrafficGenerator):
     def __init__(self, p, num_server_per_job=32):
-        SyntheticTrafficGenerator.__init__(self, N=p) # 100 packets per flow
+        SyntheticTrafficGenerator.__init__(self, p=p) # 100 packets per flow
         self.num_servers = p
         self.num_server_per_job = num_server_per_job
         self.num_repetitions = 2
