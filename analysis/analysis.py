@@ -212,12 +212,12 @@ def analyzeHybridParallel(collective_type):
     torus_dim = {16: [4,4], 64: [8,8], 256: [16,16], 512: [32,16], 1024: [32,32]}
     intra_topo_to_algo_map = {"dgx_superpod_{}nodes".format(num_nodes): "mesh", 
                                 "2D_torus_{}_{}_{}nodes".format(torus_dim[num_nodes][0],torus_dim[num_nodes][1], num_nodes): "mesh", 
-                                "Bcube_{}r_{}l".format(r,l): "mesh",
+                                "BCube_{}r_{}l".format(r,l): "mesh",
                                 "sipac_{}r_{}l".format(r,l): "sipco"}
     
     inter_topo_to_algo_map = {"dgx_superpod_{}nodes".format(num_nodes): "ring", 
                                 "2D_torus_{}_{}_{}nodes".format(torus_dim[num_nodes][0],torus_dim[num_nodes][1], num_nodes): "ring", 
-                                "Bcube_{}r_{}l".format(r,l): "ring",
+                                "BCube_{}r_{}l".format(r,l): "ring",
                                 "sipac_{}r_{}l".format(r,l): "sipco"}
     routing_scheme = "ecmp"
     job_stats = defaultdict(list)

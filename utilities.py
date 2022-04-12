@@ -55,7 +55,7 @@ def generateBashScript(exec_dir, netbench_config_files_list, exp_name=""):
     file_name = "/automated_execution_{}.sh".format(exp_name)
     with open(exec_dir + file_name, "w+") as f:
         f.write(str_builder)
-    print("[Setup] Generate bash script to {}".format(file_name))
+    print("[Setup] Generate bash script to {}".format(exec_dir+file_name))
     st = os.stat(exec_dir + file_name)
     os.chmod(exec_dir + file_name, st.st_mode | stat.S_IEXEC)
     return

@@ -32,7 +32,7 @@ class HybridParallelTrafficGenerator(synthetic_traffic_generator.SyntheticTraffi
         traffic_generator = None
         traffic_events = []
         p = comm_data['p']
-        r, l = comm_data["r"], comm_data["l"] if algo_type == "sipco" else None, None
+        r, l = (comm_data["r"], comm_data["l"]) if algo_type == "sipco" else (None, None)
         if comm_type == "ALLTOALL":
             if algo_type == "sipco":
                 traffic_generator = sipco_alltoall_traffic_generator.SiPCOAllToAllTrafficGenerator(r, l, p)

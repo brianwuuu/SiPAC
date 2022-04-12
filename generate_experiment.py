@@ -221,19 +221,19 @@ def generateHybridParallelExperiment():
                         "intra_group_message_size":100e6,
                         "inter_group_message_size":100e6})
     
-    intra_topo_to_algo_map = {"dgx_superpod_{}nodes".format(num_nodes): "mesh", 
-                                  "2D_torus_{}_{}_{}nodes".format(torus_dim[num_nodes][0],torus_dim[num_nodes][1], num_nodes): "mesh", 
-                                  "Bcube_{}r_{}l".format(r,l): "mesh",
-                                  "sipac_{}r_{}l".format(r,l): "sipco"}
-    inter_topo_to_algo_map = {"dgx_superpod_{}nodes".format(num_nodes): "ring", 
-                                  "2D_torus_{}_{}_{}nodes".format(torus_dim[num_nodes][0],torus_dim[num_nodes][1], num_nodes): "ring", 
-                                  "Bcube_{}r_{}l".format(r,l): "ring",
-                                  "sipac_{}r_{}l".format(r,l): "sipco"}
     ### Simulation Setup
     simulation_config_filenames = []
     for num_nodes in num_nodes_list:
         l = 2 if num_nodes == 512 or num_nodes == 64 else 1
         r = math.ceil(float(num_nodes) ** (1/(float(l)+1)))
+        intra_topo_to_algo_map = {"dgx_superpod_{}nodes".format(num_nodes): "mesh", 
+                                  "2D_torus_{}_{}_{}nodes".format(torus_dim[num_nodes][0],torus_dim[num_nodes][1], num_nodes): "mesh", 
+                                  "BCube_{}r_{}l".format(r,l): "mesh",
+                                  "sipac_{}r_{}l".format(r,l): "sipco"}
+        inter_topo_to_algo_map = {"dgx_superpod_{}nodes".format(num_nodes): "ring", 
+                                  "2D_torus_{}_{}_{}nodes".format(torus_dim[num_nodes][0],torus_dim[num_nodes][1], num_nodes): "ring", 
+                                  "BCube_{}r_{}l".format(r,l): "ring",
+                                  "sipac_{}r_{}l".format(r,l): "sipco"}
         for per_cu_bw_gbps in per_cu_bw_gbps_list:
             topology_list = generateTopology(num_nodes, per_cu_bw_gbps, l=l)
             for topology in topology_list:
