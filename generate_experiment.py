@@ -132,6 +132,8 @@ def generateAllReduceTraffic(topology):
     print("[Setup] Generate traffic for {}".format(topology.getName()))
     ring_allreduce_traffic = ring_allreduce_traffic_generator.RingAllReduceTrafficGenerator(p=topology.getNumServers(), num_server_per_job=topology.getNumServers())
     mesh_allreduce_traffic = mesh_allreduce_traffic_generator.MeshAllReduceTrafficGenerator(p=topology.getNumServers(), num_server_per_job=topology.getNumServers())
+    sipco_allreduce_traffic = None
+    hierarchical_allreduce_traffic = None
     if topology.getName().startswith("2D"):
         k=int(topology.getNumServers()**(1/2))
         hierarchical_allreduce_traffic = hierarchical_allreduce_traffic_generator.HierarchicalAllReduceTrafficGenerator(p=topology.getNumServers(), k=k, num_server_per_job=topology.getNumServers())
@@ -142,7 +144,6 @@ def generateAllReduceTraffic(topology):
     elif topology.getName().startswith("sipac") or topology.getName().startswith("Bcube"):
         k = (topology.getR()) ** (topology.getL())
         hierarchical_allreduce_traffic = hierarchical_allreduce_traffic_generator.HierarchicalAllReduceTrafficGenerator(p=topology.getNumServers(), k=int(k), num_server_per_job=topology.getNumServers())
-    sipco_allreduce_traffic = None
     if topology.getName().startswith("sipac") or topology.getName().startswith("Bcube"):
         sipco_allreduce_traffic = sipco_allreduce_traffic_generator.SiPCOAllReduceTrafficGenerator(r=topology.getR(), l=topology.getL(), num_server_per_job=topology.getNumServers())
 
