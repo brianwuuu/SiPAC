@@ -147,9 +147,10 @@ class SiPACNetworkTopology(NetworkTopology):
 
     def generateLinkDelayFileString(self):
         str_builder = ""    
-        for src_gpu in self.gpus:
-            for connected_device in self.adjacency_list[src_gpu]:
-                assert(self.checkLinkAdjacencyList(src_gpu, connected_device)), "Link between {} and {} does not exist.".format(src_gpu, connected_device)
-                # Transparent switching involves 2x link latency since it connects two endpoints with two links.
-                str_builder += "{},{},{},{}\n".format(src_gpu, connected_device, self.link_latency * 2, self.link_bw)
+        for gpu_group in self.gpus:
+            for src_gpu in gpu_group:
+                for connected_device in self.adjacency_list[src_gpu]:
+                    assert(self.checkLinkAdjacencyList(src_gpu, connected_device)), "Link between {} and {} does not exist.".format(src_gpu, connected_device)
+                    # Transparent switching involves 2x link latency since it connects two endpoints with two links.
+                    str_builder += "{},{},{},{}\n".format(src_gpu, connected_device, self.link_latency * 2, self.link_bw)
         return str_builder
