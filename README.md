@@ -8,17 +8,11 @@ This repository contains the source codes needed to reproduce results for the Si
 
 #### 1. Netbench (https://github.com/brianwuuu/netbench)
 
-The origina1l Netbench simulator can be found in (https://github.com/ndal-eth/netbench). We have modified Netbench to include functionalities that enable the accurate evaluation of the SiPAC architecture. Please follow the steps in building Netbench.
+The original Netbench simulator can be found in (https://github.com/ndal-eth/netbench). We have modified Netbench to include functionalities that enable the accurate evaluation of the SiPAC architecture. Please follow the steps in building Netbench.
 
 #### 2. Python 3
 
 Python dependencies: numpy, math, matplotlib.
-
-## Installation
-
-```bash
-git clone https://github.com/brianwuuu/SiPAC.git
-```
 
 ## Directory Overview.
 
@@ -34,6 +28,12 @@ Here is an overview of each directory. For more detailed descriptions, please re
     <li><strong>traffic</strong></li>
     This directory contains files in which the traffic patterns for various collective operation communication are modeled.
 </ol>
+
+## Installation
+
+```bash
+git clone https://github.com/brianwuuu/SiPAC.git
+```
 
 ## Simulation Setup
 
@@ -56,6 +56,23 @@ where exp_id =
     <li> Experiment for allreduce collective communication. </li>
     <li> Experiment for hybrid parallel collective communication.</li>
 </ol>
+
+Users can also use the provided Dockerfile to generate a Docker image. To build the Docker image, run the following command while in the SiPAC root directory:
+
+```
+docker build -t sipac .
+```
+
+To create a Docker container while mounting the container onto the host machine directory (for file generation), run:
+
+```
+docker run -it --name <container_name>\ 
+--mount type=bind,source="$(pwd)"/execution,target=/app/execution \ 
+--mount type=bind,source="$(pwd)"/temp,target=/app/temp \ 
+sipac -e <exp_id>
+```
+
+where <container_name> is the name of the Docker container and <exp_id> is the experiment ID as listed above.
 
 The network parameters can be modified using the JSON file provided in the input_parameter directory. Users can also manually change the experiment setting in this script by modifying the setup in each experiment function.
 
