@@ -15,10 +15,10 @@ python3 component_count_analysis.py
 To obtain simulation results for the topology-collective combinations, run
 
 ```
-python3 analysis.py -e <experiment_id> -c <collective_type>
+python3 analysis.py -e <experiment> -c <collective_type>
 ```
 
-where experiment_id =
+where experiment =
 
 <ul>
     <li> <em>basic</em>: results for basic collective communication (primitive or allreduce).</li>
