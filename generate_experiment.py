@@ -83,6 +83,7 @@ def createExperimentFiles(topology, traffic_arrival_events, traffic_pattern, rou
     topology_directory = traffic_directory + "/" + topology.getName()
     if not os.path.isdir(topology_directory): os.mkdir(topology_directory)
     topology_filename = "{}/initial_topology.topology".format(topology_directory)
+    with open(topology_filename, "w+") as f: f.write(topology.generateTopologyFileString())
     # 3) Flow Size Directory
     flow_size_directory = "{}/{}".format(topology_directory, flow_size)
     if not os.path.isdir(flow_size_directory): os.mkdir(flow_size_directory)
