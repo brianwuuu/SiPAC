@@ -88,9 +88,10 @@ def generateTrafficHeatMap(collective_type):
                 "hybrid": hybrid_parallel_traffic,
                 }
     for name, traffic in traffics.items():
-        events = traffic.plan_arrivals(0)
+        if traffic == "hybrid": events = traffic.plan_arrivals(0)
+        else: events = traffic.plan_arrivals(100e6)
         tm = traffic.generateProbabilityMatrix(events, 64)
-        file_name = RESULT_DIRECTORY + "{}.png".format(name)
+        file_name = RESULT_DIRECTORY + "{}_heatmap.png".format(name)
         traffic.drawHeatmap(tm, file_name)
         
 ################################################################################################################
